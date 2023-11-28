@@ -38,7 +38,13 @@ Constant Declarations
 #define XOR  9			// XOR 
 #define XNOR 10			// XNOR 
 //INPUT VALUES
-#define X = 2;
+#define X 2
+#define D 3
+#define DB 4
+// STATE VALUES
+#define SUCCESS 1
+#define FAILURE 0
+#define NEUTRAL 2
 
 /***************************************************************************************************************************
 Structure Declarations 
@@ -58,10 +64,10 @@ typedef struct GATE_type
 
 //2.Stucture declaration for GATE_VALUE
 
-type GV{
+typedef struct GV_type{
   int i;
   int v;
-}
+}GV;
 
 /***************************************************************************************************************************
 Functions in declared in input.c
@@ -99,4 +105,19 @@ void simulateLogic(GATE *, int [Mpt][Mpi], int, FILE *);
 int andOperation(GATE *, LIST *);
 int orOperation(GATE *, LIST *);
 int xorOperation(GATE *, LIST *);
+/****************************************************************************************************************************/
+
+
+/***************************************************************************************************************************
+PODEM MAIN functions in user.c
+****************************************************************************************************************************/
+int podem(GATE *, GV*);
+int podemRecursion(GATE *, GV *);
+*GV getObjective(GATE *, GV *);
+*GV backtrace(GATE *, GV *);
+int findXFanIn(GATE *, int );
+void setDontcares(GATE *);
+int findNonControlVal(GATE *, int);
+//int findFaultEffPO(GATE *, GV *);
+int checkDFrontier(LIST *, GATE *);
 /****************************************************************************************************************************/

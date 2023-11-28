@@ -16,13 +16,13 @@ int orGate[5][5] = {
   {1, 1, 1, 1, 1},
   {2, 1, 2, 2, 2},
   {3, 1, 2, 3, 1},
-  {4, 1, 2, 1, 4},
-  
+  {4, 1, 2, 1, 4}
 };
 
 int notGate[5] = {1, 0 , 2, 4, 3};
 int lineNumber = 0;
 LIST* dFrontier = NULL;
+int state = NEUTRAL;
 /****************************************************************************************************************************/
 
 /***************************************************************************************************/
@@ -178,12 +178,87 @@ int xorOperation(GATE * Node, LIST *Cur){
 /****************************************************************************************************************************/
 
 /***************************************************************************************************
+ Function to simulate logic Impl
+***************************************************************************************************/
+ int logicSimulateImpl(GATE * Node, GV *gv){
+	FreeList(dFrontier); //release the dfrontier list
+	int state = NEUTRAL;
+	int itr ;
+	for(itr = 0; itr <= tGat; itr++){ 
+		if(Node[itr].Type != 0){  //not an invalid gate
+			switch(Node[itr].Type){
+				case 1: // type input
+					break;
+				case 2: // type  from
+					Node[itr].Val = Node[Node[itr].Fin->Id].Val; 
+					break;
+				case 3: // type  buff
+					Node[itr].Val = Node[Node[itr].Fin->Id].Val;
+					break;
+				case 4: // type not
+					Node[itr].Val = notGate[Node[Node[itr].Fin->Id].Val];
+					break;
+				case 5: //type and
+					Node[itr].Val = andOperation(Node, (Node[itr].Fin));
+					break;
+				case 6: //type Nand
+					Node[itr].Val = notGate[andOperation(Node, (Node[itr].Fin))];
+					break;
+				case 7: // type or
+					Node[itr].Val = orOperation(Node, (Node[itr].Fin));
+					break;
+				case 8: // type Nor
+					Node[itr].Val = notGate[orOperation(Node, (Node[itr].Fin))];
+					break;
+				case 9: // type xor
+					Node[itr].Val = xorOperation(Node, (Node[itr].Fin));
+					break;
+				case 10: // type xNor
+					Node[itr].Val = notGate[xorOperation(Node, (Node[itr].Fin))];
+					break;
+			}
+
+			if(itr == gv->id){ // check whether ID is fault gate //fault activation
+				if(Node[itr].Val == 1 && gv->Val = 0 ){
+					Node[itr].Val = D;
+				}else if(Node[itr].Val == 0 && gv->Val = 1 ){
+					Node[itr].Val = DB;
+				}else if(Node[itr].Val != X){ //fault is mask
+					state = FAILURE;
+				}
+			}
+
+			//creating dfrontier
+			if(checkDFrontier(Node[itr].Fin, Node)){
+				InsertEle(&(dFrontier), id);//Add to dfrontier
+			}
+
+			if(dFrontier == NULL && (Node[gv->g]->Val == D || Node[gv->g]->Val == DB )){ // check dfrontier is empty && fault is activated
+				state = FAILURE;
+			}
+
+			if(Node[itr].Fot == 0){   //find Fault Effect of PO
+				if(Node[gv->g]->Val != D || Node[gv->g]->Val != DB ){ 
+					return SUCCESS;
+				}
+			}	
+
+		}
+
+	}	
+	return state;
+ }
+
+//end of simulateLogicImpl
+/****************************************************************************************************************************/
+
+/***************************************************************************************************
  Function to podem
 ***************************************************************************************************/
-int podem(GATE * Node){
+int podem(GATE * Node, GV* fault){
 	setDontcares(Node);
 
-	int result = podemRecursion(Node);
+	int result = podemRecursion(Node, fault);
 
 	if(result== SUCCESS){
 		//PRINT VALUES AT PI
@@ -199,6 +274,41 @@ int podem(GATE * Node){
 ***************************************************************************************************/
 int podemRecursion(GATE * Node, GV *gv){
 
+	int result;	
+	gv = getObjective(Node, gv);
+	gv = backtrace(Node, gv);
+	state = logicSimulateImpl(Node,gv);
+
+	result = podemRecursion(Node, gv);
+
+	if(result == SUCCESS){
+		state = SUCCESS;
+		return state;
+	}else if(result == FAILURE){
+		state = FAILURE;
+		return state;
+	}
+
+	gv->v = !(gv->v) ;
+	state = logicSimulateImpl(gv);
+	
+	result = podemRecursion(Node, gv);
+
+	if(result == SUCCESS){
+		state = SUCCESS;
+		return state;
+	}else if(result == FAILURE){
+		state = FAILURE;
+		return state;
+	}
+
+	//reset PI - BAD decision made ealier
+	gv->v = X;
+	state = logicSimulateImpl(gv);
+
+	state = FAILURE;
+	return state;
+	
 }
 //end of podemRecursion
 /****************************************************************************************************************************/
@@ -206,14 +316,18 @@ int podemRecursion(GATE * Node, GV *gv){
 /***************************************************************************************************
  Function to getObjective
 ***************************************************************************************************/
-*GV getObjective(GATE * Node, GV *gv){
-//todo
-	int d = //gate in d frontier
+*GV getObjective(GATE * Node, GV *gv){ //fault GV
+
+	if(Node[gv->g]->Val != D || Node[gv->g]->Val != DB ){ // if fault is not exicted
+		gv->v = !(gv->v);
+		return gv;
+	}
+	
+	int d = dFrontier->Id;//gate in d frontier
 	gv->g = findXFanIn(Node, d);
-	gv->v = !(Node[d]->Val);
+	gv->v = findNonControlVal(Node, d);//find non controlling value
 
 	return gv;
-
 	
 }
 //end of getObjective
@@ -222,7 +336,9 @@ int podemRecursion(GATE * Node, GV *gv){
 /***************************************************************************************************
  Function to backtrace
 ***************************************************************************************************/
-*GV backtrace(GATE * Node, int g, int v, GV *gv){
+*GV backtrace(GATE * Node, GV *gv){
+	int g = gv->g;
+	int v = gv->v;
 	int numInvertions = 0;
 	int i = g;
 
@@ -238,18 +354,9 @@ int podemRecursion(GATE * Node, GV *gv){
 
 	gv->g= i;
 	gv->v = v;
-setDontcares
+return gv;
 }
 //end of backtrace
-/****************************************************************************************************************************/
-
-/***************************************************************************************************
- Function to findXPath
-***************************************************************************************************/
-int findXPath(GATE * Node, LIST *Cur){
-	
-}
-//end of findXPath
 /****************************************************************************************************************************/
 
 /***************************************************************************************************
@@ -259,7 +366,7 @@ int findXFanIn(GATE *Node, int i){
 	LIST *tmp = Node[i]->Fin;
 	i = 0;
 	while(tmp!=NULL){   
-		if([Node[tmp->Id].Val == X ){ // checl value is x 
+		if([Node[tmp->Id].Val == X ){ // check value is x 
 			i = tmp->Id;
 			break;
 		}
@@ -275,9 +382,52 @@ int findXFanIn(GATE *Node, int i){
 ***************************************************************************************************/
 void setDontcares(GATE *Node){
 	int i;
-	for(i=1;i<=Tgat;i++){ 
+	for(i=1;i<=tGat;i++){ 
 		Node[i].Val = X;			
 	}
 }
 //end of findXFanIn
+/****************************************************************************************************************************/
+
+/***************************************************************************************************
+ Function to findNonControlVal
+***************************************************************************************************/
+int findNonControlVal(GATE *Node, int gId){
+	if(Node[gId].Type==AND || Node[gId].Type==NAND) 	return 1;
+	else  if(Node[gId].Type==OR || Node[gId].Type==NOR) return 0;
+	else return -1;
+}
+//end of findNonControlVal
+/****************************************************************************************************************************/
+
+/***************************************************************************************************
+ Function to find Fault Effect of PO
+***************************************************************************************************/
+//int findFaultEffPO(GATE *Node, GV* gv){
+	//int i;
+	//for(i=1;i<=tGat;i++){ 
+	// 	if(Node[id].Fot == 0){
+	// 		if(Node[gv->g]->Val != D || Node[gv->g]->Val != DB ){ 
+	// 			return SUCCESS;
+	// 		}
+	// 	}			
+	// //}
+// 	return FAILURE;
+// }
+//end of findFaultEffPO
+/****************************************************************************************************************************/
+
+/***************************************************************************************************
+ Function to check DFrontier
+***************************************************************************************************/
+int checkDFrontier(LIST *Cur, GATE *Node){
+	LIST *temp=NULL;
+	
+	temp=Cur;
+	while(temp!=NULL){
+	if(Node[temp->Id].Val==D || Node[temp->Id].Val==DB) return 1;
+	temp=temp->Next; }
+	return 0;
+}
+//end of checkDFrontier
 /****************************************************************************************************************************/
