@@ -38,7 +38,7 @@ Constant Declarations
 #define XOR  9			// XOR 
 #define XNOR 10			// XNOR 
 //INPUT VALUES
-#define X 2
+#define XV 2
 #define D 3
 #define DB 4
 // STATE VALUES
@@ -65,7 +65,7 @@ typedef struct GATE_type
 //2.Stucture declaration for GATE_VALUE
 
 typedef struct GV_type{
-  int i;
+  int g;
   int v;
 }GV;
 
@@ -111,10 +111,11 @@ int xorOperation(GATE *, LIST *);
 /***************************************************************************************************************************
 PODEM MAIN functions in user.c
 ****************************************************************************************************************************/
-int podem(GATE *, GV*);
+int podem(GATE *, GV*, int);
 int podemRecursion(GATE *, GV *);
-*GV getObjective(GATE *, GV *);
-*GV backtrace(GATE *, GV *);
+int logicSimulateImpl(GATE *, GV *, GV *);
+GV* getObjective(GATE *, GV *);
+GV* backtrace(GATE *, GV *);
 int findXFanIn(GATE *, int );
 void setDontcares(GATE *);
 int findNonControlVal(GATE *, int);

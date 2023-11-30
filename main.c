@@ -28,15 +28,24 @@ fclose(Isc);                                   //Close file pointer for .isc fil
 PrintGats(Node,Tgat);                          //Print the information of each active gate in Node structure after reading .isc file
 CountPri(Node,Tgat,&Npi,&Npo);                 //Count the No of Pis and Pos
 int patternList[Mpt][Mpi];
-Pat = fopen(argv[2],"r");
-ReadPattern(Pat, patternList, Npi);
-fclose(Pat);
-printPatternList(patternList, Npi);
-Res = fopen(argv[3],"w");
-simulateLogic(Node, patternList, Tgat, Res);
-fclose(Res);
+// Pat = fopen(argv[2],"r");
+// ReadPattern(Pat, patternList, Npi);
+// fclose(Pat);
+// printPatternList(patternList, Npi);
+// Res = fopen(argv[3],"w");
+// simulateLogic(Node, patternList, Tgat, Res);
+//fclose(Res);
 
 printf("\n\nNpi: %d Npo: %d\n",Npi,Npo);       //Print the no of primary inputs and outputs
+
+GV* gv = malloc(sizeof(GV));
+
+gv->g = 10;
+gv->v = 0;
+printf("st\n");
+podem(Node,gv, Tgat);
+
+free(gv);
 /***************************************************************************************************/
 
 /***************************************************************************************************/
