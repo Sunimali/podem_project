@@ -41,7 +41,7 @@ printf("\n\nNpi: %d Npo: %d\n",Npi,Npo);       //Print the no of primary inputs 
 GV* gv = malloc(sizeof(GV));
 
 gv->g = 10;
-gv->v = 0;
+gv->v = 1;
 printf("st\n");
 podem(Node,gv, Tgat);
 

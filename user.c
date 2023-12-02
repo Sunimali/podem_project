@@ -311,18 +311,13 @@ int podemRecursion(GATE * Node, GV *fault){
 	printf("backrace gate id: %d  val: %d\n",pi->g, pi->v);
 	printf("sta fasul id: %d  val: %d\n",fault->g, fault->v);
 	state = logicSimulateImpl(Node,pi,fault);
-	// if(state == SUCCESS){
-	// 	return state;
-	// }else if(state == FAILURE){
-	// 	return state;
-	// }
-	printf("start PDR state %d\n",state);
-	obj = getObjective(Node, fault, obj);
-	printf("gate id: %d  val: %d",obj->g, obj->v);
-	i++;
-	pi = backtrace(Node, obj);
-	state = logicSimulateImpl(Node,pi,fault);
-	//result = podemRecursion(Node, fault);
+	if(state == SUCCESS){
+		return state;
+	}else if(state == FAILURE){
+		return state;
+	}
+	
+	result = podemRecursion(Node, fault);
 	free(obj);
 
 	if(result == SUCCESS){
@@ -333,15 +328,15 @@ int podemRecursion(GATE * Node, GV *fault){
 	// 	return state;
 	// }
 
-	// pi->v = !(pi->v) ;
-	// state = logicSimulateImpl(Node, pi, fault);
+	pi->v = !(pi->v) ;
+	state = logicSimulateImpl(Node, pi, fault);
 
-	// if(state == SUCCESS){
-	// 	return state;
-	// }else if(state == FAILURE){
-	// 	return state;
-	// }
-	// result = podemRecursion(Node, fault);
+	if(state == SUCCESS){
+		return state;
+	}else if(state == FAILURE){
+		return state;
+	}
+	result = podemRecursion(Node, fault);
 
 	if(result == SUCCESS){
 		state = SUCCESS;
@@ -352,14 +347,14 @@ int podemRecursion(GATE * Node, GV *fault){
 	// }
 
 	//reset PI - BAD decision made ealier
-	// pi->v = XV;
-	// state = logicSimulateImpl(Node, pi, fault);
-	// if(state == SUCCESS){
-	// 	return state;
-	// }else if(state == FAILURE){
-	// 	return state;
-	// }
-	// state = FAILURE;
+	pi->v = XV;
+	state = logicSimulateImpl(Node, pi, fault);
+	if(state == SUCCESS){
+		return state;
+	}else if(state == FAILURE){
+		return state;
+	}
+	state = FAILURE;
 	
 	return state;
 	
@@ -372,7 +367,7 @@ int podemRecursion(GATE * Node, GV *fault){
 ***************************************************************************************************/
 GV* getObjective(GATE * Node, GV *fault, GV * obj){ //fault GV
 
-	if(Node[fault->g].Val != D || Node[fault->g].Val != DB ){ // if fault is not exicted
+	if(Node[fault->g].Val != D && Node[fault->g].Val != DB ){ // if fault is not exicted
 		printf("fault is not excited fault id%d val%d,sec val%d\n",fault->g,fault->v, Node[fault->g].Val);
 		obj->v = !(fault->v);
 		obj->g = fault->g;
