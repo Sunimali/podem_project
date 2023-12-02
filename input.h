@@ -114,11 +114,11 @@ PODEM MAIN functions in user.c
 int podem(GATE *, GV*, int);
 int podemRecursion(GATE *, GV *);
 int logicSimulateImpl(GATE *, GV *, GV *);
-GV* getObjective(GATE *, GV *);
+GV* getObjective(GATE *, GV *, GV *);
 GV* backtrace(GATE *, GV *);
 int findXFanIn(GATE *, int );
 void setDontcares(GATE *);
 int findNonControlVal(GATE *, int);
 //int findFaultEffPO(GATE *, GV *);
-int checkDFrontier(LIST *, GATE *);
+int checkDFrontier(int, GATE *);
 /****************************************************************************************************************************/

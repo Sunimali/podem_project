@@ -129,7 +129,8 @@ int andOperation(GATE * Node, LIST *Cur){
 	LIST *tmp=Cur;
 	int output=1;
 
-	while(tmp!=NULL){   
+	while(tmp!=NULL){  
+		//printf("INPUTTTTTTT%d\n", Node[tmp->Id].Val); 
 		output = andGate[output][Node[tmp->Id].Val]; // check output by two by two
 		if(output == 0){ // if one pair give out as 0 then stop
 			break;
@@ -188,6 +189,7 @@ int xorOperation(GATE * Node, LIST *Cur){
 	int itr ;
 
 	Node[gv->g].Val = gv->v ; // assign PI
+	printf("primary INUPUT id: %d value:%d\n",gv->g, Node[gv->g].Val);
 	for(itr = 0; itr <= tGat; itr++){ 
 		if(Node[itr].Type != 0){  //not an invalid gate
 			switch(Node[itr].Type){
@@ -206,7 +208,9 @@ int xorOperation(GATE * Node, LIST *Cur){
 					Node[itr].Val = andOperation(Node, (Node[itr].Fin));
 					break;
 				case 6: //type Nand
+					
 					Node[itr].Val = notGate[andOperation(Node, (Node[itr].Fin))];
+					printf("nand id%d value%d\n", itr, Node[itr].Val);
 					break;
 				case 7: // type or
 					Node[itr].Val = orOperation(Node, (Node[itr].Fin));
@@ -224,12 +228,14 @@ int xorOperation(GATE * Node, LIST *Cur){
 
 			if(itr == fault->g){ // check whether ID is fault gate //fault activation
 				printf("fault gate id%d\n", itr);
-				if(Node[itr].Val == 1 && fault->v == 1 ){
+				if(Node[itr].Val == 0 && fault->v == 1 ){
 					Node[itr].Val = D;
 					printf("fault gate D\n");
-				}else if(Node[itr].Val == 0 && fault->v == 0 ){
+				}else if(Node[itr].Val == 1 && fault->v == 0 ){
 					Node[itr].Val = DB;
 					printf("fault gate DB\n");
+				}else{
+					printf("fault is not activated id%d fault%d\n", Node[itr].Val,  fault->v);
 				}// }else if(Node[itr].Val != XV){ //fault is mask
 				// 	state = FAILURE;
 				// 	printf("fault gate MASK\n");
@@ -239,24 +245,25 @@ int xorOperation(GATE * Node, LIST *Cur){
 			}
 
 			//creating dfrontier
-			if(checkDFrontier(Node[itr].Fin, Node)){
+			if(checkDFrontier(itr, Node)){
 				printf("ADD dfrontier %d\n",itr);
 				InsertEle(&(dFrontier), itr);//Add to dfrontier
 			}
 
-			if(dFrontier == NULL && (Node[fault->g].Val == D || Node[fault->g].Val == DB )){ // check dfrontier is empty && fault is activated
-				printf("No dfrontier\n");
-				state = FAILURE;
-			}
 
-			if(Node[itr].Fot == 0){   //find Fault Effect of PO
-				if(Node[itr].Val != D || Node[itr].Val != DB ){ 
+			if(Node[itr].Nfo == 0){   //find Fault Effect of PO
+				if(Node[itr].Val == D || Node[itr].Val == DB ){ 
 					printf("PO IS d or db %d\n",itr);
-					return SUCCESS;
+					state =  SUCCESS;
+					return state;
 				}
 			}	
 		}
 
+	}
+	if(dFrontier == NULL && (Node[fault->g].Val == D || Node[fault->g].Val == DB )){ // check dfrontier is empty && fault is activated
+				printf("No dfrontier && fault mask\n");
+				state = FAILURE;
 	}	
 	return state;
  }
@@ -278,8 +285,10 @@ int podem(GATE * Node, GV* fault, int tGatNum){
 
 	if(result== SUCCESS){
 		//PRINT VALUES AT PI
+		printf("value: %d%d%d%d%d\n",Node[1].Val, Node[2].Val, Node[3].Val, Node[6].Val, Node[7].Val);
 	}else{
 		//print fault f in untestable
+		printf("fault is untestable%d\n", result);
 	}
 
 }
@@ -292,43 +301,65 @@ int i = 0;
 int podemRecursion(GATE * Node, GV *fault){
 	printf("start PDR %d\n",i);
 	int result;
-	GV* pi;
-	GV* obj;	
-	obj = getObjective(Node, fault);
+	GV* pi;//=  malloc(sizeof(GV));
+	GV* obj =  malloc(sizeof(GV));	
+	obj = getObjective(Node, fault, obj);
 	printf("gate id: %d  val: %d",obj->g, obj->v);
 	i++;
 	pi = backtrace(Node, obj);
-	printf("backrace gate id: %d  val: %d",pi->g, pi->v);
-	state = logicSimulateImpl(Node,pi,fault);
-	printf("start PDR state %d\n",state);
-	result = podemRecursion(Node, fault);
-
-	if(result == SUCCESS){
-		state = SUCCESS;
-		return state;
-	}else if(result == FAILURE){
-		state = FAILURE;
-		return state;
-	}
-
-	pi->v = !(pi->v) ;
-	state = logicSimulateImpl(Node, pi, fault);
 	
-	result = podemRecursion(Node, fault);
+	printf("backrace gate id: %d  val: %d\n",pi->g, pi->v);
+	printf("sta fasul id: %d  val: %d\n",fault->g, fault->v);
+	state = logicSimulateImpl(Node,pi,fault);
+	// if(state == SUCCESS){
+	// 	return state;
+	// }else if(state == FAILURE){
+	// 	return state;
+	// }
+	printf("start PDR state %d\n",state);
+	obj = getObjective(Node, fault, obj);
+	printf("gate id: %d  val: %d",obj->g, obj->v);
+	i++;
+	pi = backtrace(Node, obj);
+	state = logicSimulateImpl(Node,pi,fault);
+	//result = podemRecursion(Node, fault);
+	free(obj);
 
 	if(result == SUCCESS){
 		state = SUCCESS;
 		return state;
-	}else if(result == FAILURE){
-		state = FAILURE;
+	}// }else if(result == FAILURE){
+	// 	state = FAILURE;
+	// 	return state;
+	// }
+
+	// pi->v = !(pi->v) ;
+	// state = logicSimulateImpl(Node, pi, fault);
+
+	// if(state == SUCCESS){
+	// 	return state;
+	// }else if(state == FAILURE){
+	// 	return state;
+	// }
+	// result = podemRecursion(Node, fault);
+
+	if(result == SUCCESS){
+		state = SUCCESS;
 		return state;
-	}
+	}// }else if(result == FAILURE){
+	// 	state = FAILURE;
+	// 	return state;
+	// }
 
 	//reset PI - BAD decision made ealier
-	pi->v = XV;
-	state = logicSimulateImpl(Node, pi, fault);
-
-	state = FAILURE;
+	// pi->v = XV;
+	// state = logicSimulateImpl(Node, pi, fault);
+	// if(state == SUCCESS){
+	// 	return state;
+	// }else if(state == FAILURE){
+	// 	return state;
+	// }
+	// state = FAILURE;
 	
 	return state;
 	
@@ -339,18 +370,21 @@ int podemRecursion(GATE * Node, GV *fault){
 /***************************************************************************************************
  Function to getObjective
 ***************************************************************************************************/
-GV* getObjective(GATE * Node, GV *gv){ //fault GV
+GV* getObjective(GATE * Node, GV *fault, GV * obj){ //fault GV
 
-	if(Node[gv->g].Val != D || Node[gv->g].Val != DB ){ // if fault is not exicted
-		gv->v = !(gv->v);
-		return gv;
+	if(Node[fault->g].Val != D || Node[fault->g].Val != DB ){ // if fault is not exicted
+		printf("fault is not excited fault id%d val%d,sec val%d\n",fault->g,fault->v, Node[fault->g].Val);
+		obj->v = !(fault->v);
+		obj->g = fault->g;
+		return obj;
 	}
 	
 	int d = dFrontier->Id;//gate in d frontier
-	gv->g = findXFanIn(Node, d);
-	gv->v = findNonControlVal(Node, d);//find non controlling value
+	printf("get dfrontier%d\n",d);
+	obj->g = findXFanIn(Node, d);
+	obj->v = findNonControlVal(Node, d);//find non controlling value
 
-	return gv;
+	return obj;
 	
 }
 //end of getObjective
@@ -365,6 +399,10 @@ GV* backtrace(GATE * Node, GV *gv){
 	int numInvertions = 0;
 	int i = g;
 
+	if(Node[i].Type == NOR || Node[i].Type == NOT || Node[i].Type == NAND){// inverting type gate
+		numInvertions ++;
+	}
+
 	while(Node[i].Nfi !=0){
 		i = findXFanIn(Node, i);
 		if(Node[i].Type == NOR || Node[i].Type == NOT || Node[i].Type == NAND){// inverting type gate
@@ -377,7 +415,8 @@ GV* backtrace(GATE * Node, GV *gv){
 
 	gv->g= i;
 	gv->v = v;
-return gv;
+	 //printf("iddddd%d val%d\n",gv->g, gv->v);
+	return gv;
 }
 //end of backtrace
 /****************************************************************************************************************************/
@@ -391,6 +430,7 @@ int findXFanIn(GATE *Node, int i){
 	while(tmp!=NULL){   
 		if(Node[tmp->Id].Val == XV ){ // check value is x 
 			i = tmp->Id;
+			printf("id is %d\n",i);
 			break;
 		}
 		tmp = tmp->Next; 
@@ -445,12 +485,21 @@ int findNonControlVal(GATE *Node, int gId){
 /***************************************************************************************************
  Function to check DFrontier
 ***************************************************************************************************/
-int checkDFrontier(LIST *Cur, GATE *Node){
+int checkDFrontier(int id, GATE *Node){
+	printf("value of date%d id%d\n", Node[id].Val, id);
+	if(Node[id].Val != XV){ // if output is not x 
+		printf("value x\n");
+		return 0;
+	}
+	LIST *Cur = Node[id].Fin;
 	LIST *temp=NULL;
-	
+	printf("value of input val%d\n", Node[10].Val);
 	temp=Cur;
 	while(temp!=NULL){
-	if(Node[temp->Id].Val==D || Node[temp->Id].Val==DB) return 1;
+	if(Node[temp->Id].Val==D || Node[temp->Id].Val==DB){
+		printf("dfront\n");
+		return 1;
+	}
 	temp=temp->Next; }
 	return 0;
 }
