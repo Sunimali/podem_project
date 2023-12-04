@@ -38,12 +38,35 @@ int patternList[Mpt][Mpi];
 
 printf("\n\nNpi: %d Npo: %d\n",Npi,Npo);       //Print the no of primary inputs and outputs
 
-GV* gv = malloc(sizeof(GV));
+int faultCount = 0 ;//number of all faults
+int successFCount = 0;// number of success fault count
+int failedFCount = 0; // number of fail fault count
+int timeOutFCount =0; // number of time out fault count
 
-gv->g = 10;
-gv->v = 1;
+GV* gv = malloc(sizeof(GV));
+//483 - 487 st1
+for(i = 0;i<=Tgat;i++){
+    if(Node[i].Type != 0){
+        for(j=0;j<2;j++){
+            gv->g = i;
+            gv->v = j;
+            faultCount++;
+            int state  = podem(Node,gv, Tgat);
+            if(state == SUCCESS){
+                successFCount++;
+                //printPI(Node);
+            }else if(state == FAILURE){
+                failedFCount++;
+            }else{
+                timeOutFCount++;
+            }
+        }
+    }
+}
+
+checkFaultCoverage(faultCount, successFCount, failedFCount, timeOutFCount);
+
 printf("st\n");
-podem(Node,gv, Tgat);
 
 free(gv);
 /***************************************************************************************************/

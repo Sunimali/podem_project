@@ -45,6 +45,7 @@ Constant Declarations
 #define SUCCESS 1
 #define FAILURE 0
 #define NEUTRAL 2
+#define TIMEOUT 3
 
 /***************************************************************************************************************************
 Structure Declarations 
@@ -112,13 +113,14 @@ int xorOperation(GATE *, LIST *);
 PODEM MAIN functions in user.c
 ****************************************************************************************************************************/
 int podem(GATE *, GV*, int);
-int podemRecursion(GATE *, GV *);
-int logicSimulateImpl(GATE *, GV *, GV *);
-GV* getObjective(GATE *, GV *, GV *);
-GV* backtrace(GATE *, GV *);
+int podemRecursion(GATE *, GV *, clock_t);
+int logicSimulateImpl(GATE *, GV , GV *);
+GV getObjective(GATE *, GV *, GV);
+GV backtrace(GATE *, GV);
 int findXFanIn(GATE *, int );
 void setDontcares(GATE *);
 int findNonControlVal(GATE *, int);
-//int findFaultEffPO(GATE *, GV *);
 int checkDFrontier(int, GATE *);
+void printPI(GATE *);
+void checkFaultCoverage(int, int, int, int);
 /****************************************************************************************************************************/
