@@ -43,7 +43,6 @@ int ReadPattern(FILE * pattern, int patternList[Mpt][Mpi], int nPi){
 
 		while(index != nPi){
 			sprintf(input, "%.*s\n", 1 , &line[index]);
-			//printf("test%d ", atoi(input));
 			patternList[lineNumber][index] = atoi(input);
 			index ++;
 		}
@@ -233,7 +232,7 @@ int xorOperation(GATE * Node, LIST *Cur){
 					Node[itr].Val = D;
 				}else if(Node[itr].Val == 1 && fault->v == 0 ){
 					Node[itr].Val = DB;
-				}else{
+				}else if(Node[itr].Val != XV){
 					;
 				}
 			}
@@ -242,7 +241,6 @@ int xorOperation(GATE * Node, LIST *Cur){
 			if(checkDFrontier(itr, Node)){
 				InsertEle(&(dFrontier), itr);//Add to dfrontier
 			}
-
 
 			if(Node[itr].Nfo == 0){   //find Fault Effect of PO
 				if(Node[itr].Val == D || Node[itr].Val == DB ){ 
@@ -254,8 +252,9 @@ int xorOperation(GATE * Node, LIST *Cur){
 
 	}
 	
-	if(dFrontier == NULL && (Node[fault->g].Val == D || Node[fault->g].Val == DB )){ // check dfrontier is empty && fault is activated
-				state = FAILURE;
+	if(dFrontier == NULL && (Node[fault->g].Val == D || Node[fault->g].Val == DB ) ){ // check dfrontier is empty && fault is activated
+		printf("failed\n");
+		state = FAILURE;
 	}	
 	return state;
  }
@@ -283,7 +282,7 @@ int podemRecursion(GATE * Node, GV *fault, clock_t clockStart){
 	int result;
 	clock_t end = clock();
 	double duration = (double)(end - clockStart)/CLOCKS_PER_SEC;
-	if(duration>1){
+	if(duration> 0.02){
 		state = TIMEOUT;
 		return state;
 	}
@@ -308,6 +307,9 @@ int podemRecursion(GATE * Node, GV *fault, clock_t clockStart){
 		state = SUCCESS;
 		
 		return state;
+	}else if(result == TIMEOUT){
+		state = TIMEOUT;
+		return state;
 	}
 	
 	pi.v = !(pi.v) ;
@@ -327,7 +329,11 @@ int podemRecursion(GATE * Node, GV *fault, clock_t clockStart){
 	if(result == SUCCESS){
 		state = SUCCESS;
 		return state;
+	}else if(result == TIMEOUT){
+		state = TIMEOUT;
+		return state;
 	}
+	
 	
 	//reset PI - BAD decision made ealier
 	pi.v = XV;
@@ -476,12 +482,16 @@ void printPI(GATE* Node){
 /***************************************************************************************************
  Function to check fault coverage
 ***************************************************************************************************/
-void checkFaultCoverage(int totalf, int sf, int ff, int tf){
+void checkFaultCoverage(FILE* res, int totalf, int sf, int ff, int tf){
 	printf("Total Fault count: %d\n", totalf);
 	printf("Total Sucess Fault count: %d\n", sf);
 	printf("Total Failed Fault count: %d\n", ff);
 	printf("Total Time Out Fault count: %d\n", tf);
-	printf("Total Sucess Fault coverage: %.2f%%\n", (double)(sf*100/totalf) );
+	printf("Total Sucess Fault coverage: %.2f%% \n", (double)sf*100/totalf );
+
+	fprintf(res, "Total Failed Fault coverage: %.2f%%\n", (double)(ff*100/totalf));
+	fprintf(res, "Total Time Out Fault coverage: %.2f%%\n", (double)(tf*100/totalf));
+	fprintf(res, "Total Sucess Fault coverage: %.2f%%\n", (double)(sf*100/totalf));
 }
 
 //end of checkFaultCoverage

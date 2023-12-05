@@ -122,5 +122,5 @@ void setDontcares(GATE *);
 int findNonControlVal(GATE *, int);
 int checkDFrontier(int, GATE *);
 void printPI(GATE *);
-void checkFaultCoverage(int, int, int, int);
+void checkFaultCoverage(FILE* , int, int, int, int);
 /****************************************************************************************************************************/
