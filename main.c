@@ -44,7 +44,6 @@ int failedFCount = 0; // number of fail fault count
 int timeOutFCount =0; // number of time out fault count
 
 GV* gv = malloc(sizeof(GV));
-//483 - 487 st1
 for(i = 0;i<=Tgat;i++){
     if(Node[i].Type != 0){
         for(j=0;j<2;j++){
