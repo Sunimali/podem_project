@@ -185,9 +185,10 @@ int xorOperation(GATE * Node, LIST *Cur){
 ***************************************************************************************************/
  int logicSimulateImpl(GATE * Node, GV gv, GV * fault){
 
-	if(dFrontier != NULL){
-		FreeList(&dFrontier); //release the dfrontier list
-	}
+	int mask = 0;
+	//if(dFrontier != NULL){
+	FreeList(&dFrontier); //release the dfrontier list
+	//}
 	int state = NEUTRAL;
 	int itr ;
 
@@ -232,8 +233,10 @@ int xorOperation(GATE * Node, LIST *Cur){
 					Node[itr].Val = D;
 				}else if(Node[itr].Val == 1 && fault->v == 0 ){
 					Node[itr].Val = DB;
-				}else if(Node[itr].Val != XV){
-					;
+				}
+
+				if((Node[itr].Val == 0 && fault->v == 0) || (Node[itr].Val == 1 && fault->v == 1) ){ //fault masking
+					mask = 1;
 				}
 			}
 
@@ -251,9 +254,10 @@ int xorOperation(GATE * Node, LIST *Cur){
 		}
 
 	}
-	
-	if(dFrontier == NULL && (Node[fault->g].Val == D || Node[fault->g].Val == DB ) ){ // check dfrontier is empty && fault is activated
-		printf("failed\n");
+	if(mask){ //fault masking
+		state = FAILURE;
+	}
+	if(dFrontier == NULL && (Node[fault->g].Val == D || Node[fault->g].Val == DB )){ // check dfrontier is empty && fault is activated
 		state = FAILURE;
 	}	
 	return state;
@@ -279,62 +283,64 @@ int podem(GATE * Node, GV* fault, int tGatNum){
 ***************************************************************************************************/
 int podemRecursion(GATE * Node, GV *fault, clock_t clockStart){
 
+	int mask = 0;
 	int result;
 	clock_t end = clock();
 	double duration = (double)(end - clockStart)/CLOCKS_PER_SEC;
-	if(duration> 0.02){
+	if(duration> 0.2){
 		state = TIMEOUT;
 		return state;
 	}
 	GV pi;
 	GV obj; 
 	
-	obj = getObjective(Node, fault, obj); 	
+	obj = getObjective(Node, fault, obj);
+	if(obj.g == 0){
+		state = FAILURE;
+		return state;
+	} 	
 
 	
 	pi = backtrace(Node, obj); 
+	if(pi.g == 0){
+		state = FAILURE;
+		return state;
+	} 	
 	state = logicSimulateImpl(Node,pi,fault);
 	
 	if(state == SUCCESS){
 		return state;
-	}else if(state == FAILURE){
-		return state;
 	}
 
-	result = podemRecursion(Node, fault, clockStart);
-	
-	if(result == SUCCESS){
-		state = SUCCESS;
+	if(state != FAILURE){
+		result = podemRecursion(Node, fault, clockStart);		
+		if(result == SUCCESS){
+			state = SUCCESS;			
+			return state;
+		}else if(result == TIMEOUT){
+			state = TIMEOUT;
+			return state;
+		}
+	}
 		
-		return state;
-	}else if(result == TIMEOUT){
-		state = TIMEOUT;
-		return state;
-	}
-	
 	pi.v = !(pi.v) ;
-
 	state = logicSimulateImpl(Node, pi, fault);
 	
 
 	if(state == SUCCESS){
 		return state;
-	}else if(state == FAILURE){
-		return state;
 	}
-
-	result = podemRecursion(Node, fault, clockStart);
-
-
-	if(result == SUCCESS){
-		state = SUCCESS;
-		return state;
-	}else if(result == TIMEOUT){
-		state = TIMEOUT;
-		return state;
+	if(state != FAILURE){
+		result = podemRecursion(Node, fault, clockStart);
+		if(result == SUCCESS){
+			state = SUCCESS;
+			return state;
+		}else if(result == TIMEOUT){
+			state = TIMEOUT;
+			return state;
+		}
 	}
-	
-	
+		
 	//reset PI - BAD decision made ealier
 	pi.v = XV;
 	state = logicSimulateImpl(Node, pi, fault);
@@ -361,7 +367,11 @@ GV getObjective(GATE * Node, GV *fault, GV obj){ //fault GV
 		obj.g = fault->g;
 		return obj;
 	}
-	
+	if(dFrontier == NULL){
+		obj.g = -1;
+		obj.v = -1;
+		return obj;
+	}
 	int d = dFrontier->Id;//gate in d frontier
 	obj.g = findXFanIn(Node, d);
 	obj.v = findNonControlVal(Node, d);//find non controlling value
@@ -438,6 +448,7 @@ void setDontcares(GATE *Node){
 int findNonControlVal(GATE *Node, int gId){
 	if(Node[gId].Type==AND || Node[gId].Type==NAND) 	return 1;
 	else  if(Node[gId].Type==OR || Node[gId].Type==NOR) return 0;
+	else if(Node[gId].Type==NOT) return 1;
 	else return -1;
 }
 //end of findNonControlVal
@@ -489,9 +500,9 @@ void checkFaultCoverage(FILE* res, int totalf, int sf, int ff, int tf){
 	printf("Total Time Out Fault count: %d\n", tf);
 	printf("Total Sucess Fault coverage: %.2f%% \n", (double)sf*100/totalf );
 
-	fprintf(res, "Total Failed Fault coverage: %.2f%%\n", (double)(ff*100/totalf));
-	fprintf(res, "Total Time Out Fault coverage: %.2f%%\n", (double)(tf*100/totalf));
-	fprintf(res, "Total Sucess Fault coverage: %.2f%%\n", (double)(sf*100/totalf));
+	fprintf(res, "Total Failed Fault coverage: %.2f%% \n", (double)(ff*100/totalf));
+	fprintf(res, "Total Time Out Fault coverage: %.2f%% \n", (double)(tf*100/totalf));
+	fprintf(res, "Total Sucess Fault coverage: %.2f%% \n", (double)(sf*100/totalf));
 }
 
 //end of checkFaultCoverage

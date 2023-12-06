@@ -56,15 +56,13 @@ for(i = 0;i<=Tgat;i++){
 
             if(state == SUCCESS){
                 successFCount++;
-                //printPI(Node);
-                fprintf(ResP, "%d/%d Success" , i, j);
+                fprintf(ResP, "%d/%d Success\n" , i, j);
 
             }else if(state == FAILURE){
-                printf("failure: id%d value%d\n", i, j);
-                fprintf(ResP, "%d %d Failure" , i, j);
+                fprintf(ResP, "%d %d Failure\n" , i, j);
                 failedFCount++;
             }else if(state == TIMEOUT){
-                fprintf(ResP, "%d %d Timeout" , i, j);
+                fprintf(ResP, "%d %d Timeout\n" , i, j);
                 timeOutFCount++;
             }
         }
