@@ -500,9 +500,9 @@ void checkFaultCoverage(FILE* res, int totalf, int sf, int ff, int tf){
 	printf("Total Time Out Fault count: %d\n", tf);
 	printf("Total Sucess Fault coverage: %.2f%% \n", (double)sf*100/totalf );
 
-	fprintf(res, "Total Failed Fault coverage: %.2f%% \n", (double)(ff*100/totalf));
-	fprintf(res, "Total Time Out Fault coverage: %.2f%% \n", (double)(tf*100/totalf));
-	fprintf(res, "Total Sucess Fault coverage: %.2f%% \n", (double)(sf*100/totalf));
+	fprintf(res, "Total Failed Fault coverage: %.2f%% \n", (double)ff*100/totalf);
+	fprintf(res, "Total Time Out Fault coverage: %.2f%% \n", (double)tf*100/totalf);
+	fprintf(res, "Total Sucess Fault coverage: %.2f%% \n", (double)sf*100/totalf);
 }
 
 //end of checkFaultCoverage
