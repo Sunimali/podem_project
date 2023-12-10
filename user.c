@@ -23,6 +23,19 @@ int orGate[5][5] = {
 };
 
 int notGate[5] = {1, 0 , 2, 4, 3};
+int nonControllingValues[11] = {
+	-1, //invalid
+	-1, //input
+	-1, //from
+	-1, //buff
+	1, //Not
+	1, //and
+	1, //Nand
+	0, //Or
+	0, //Nor
+	1, //XOR
+	1  //XNOR
+};
 int lineNumber = 0;
 LIST* dFrontier = NULL;
 int state = NEUTRAL;
@@ -275,6 +288,7 @@ int podem(GATE * Node, GV* fault, int tGatNum){
 	setDontcares(Node);
 	int start = clock();
 	int result = podemRecursion(Node, fault, start);
+	return result;
 }
 //end of podem
 /****************************************************************************************************************************/
@@ -446,10 +460,7 @@ void setDontcares(GATE *Node){
  Function to findNonControlVal
 ***************************************************************************************************/
 int findNonControlVal(GATE *Node, int gId){
-	if(Node[gId].Type==AND || Node[gId].Type==NAND) 	return 1;
-	else  if(Node[gId].Type==OR || Node[gId].Type==NOR) return 0;
-	else if(Node[gId].Type==NOT) return 1;
-	else return -1;
+	return nonControllingValues[Node[gId].Type];
 }
 //end of findNonControlVal
 /****************************************************************************************************************************/

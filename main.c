@@ -59,10 +59,10 @@ for(i = 0;i<=Tgat;i++){
                 fprintf(ResP, "%d/%d Success\n" , i, j);
 
             }else if(state == FAILURE){
-                fprintf(ResP, "%d %d Failure\n" , i, j);
+                fprintf(ResP, "%d/%d Failure\n" , i, j);
                 failedFCount++;
             }else if(state == TIMEOUT){
-                fprintf(ResP, "%d %d Timeout\n" , i, j);
+                fprintf(ResP, "%d/%d Timeout\n" , i, j);
                 timeOutFCount++;
             }
         }

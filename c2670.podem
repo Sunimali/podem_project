@@ -4176,7 +4176,7 @@
 3091/1 Success
 3094/0 Success
 3094/1 Success
-3095/0 Timeout
+3095/0 Success
 3095/1 Success
 3096/0 Success
 3096/1 Success
@@ -4212,7 +4212,7 @@
 3113/1 Success
 3116/0 Success
 3116/1 Success
-3117/0 Timeout
+3117/0 Success
 3117/1 Success
 3118/0 Success
 3118/1 Success
@@ -5339,5 +5339,5 @@
 3882/0 Success
 3882/1 Success
 Total Failed Fault coverage: 1.29% 
-Total Time Out Fault coverage: 2.68% 
-Total Sucess Fault coverage: 96.03% 
+Total Time Out Fault coverage: 2.64% 
+Total Sucess Fault coverage: 96.07% 
